@@ -1,0 +1,21 @@
+[2022-01-17 11:25:13.856] {eris_parser.py:31} INFO     - === START ===
+[2022-01-17 11:25:13.856] {eris_parser.py:31} INFO     - 
+
+[2022-01-17 11:25:13.860] {eris_parser.py:81} INFO     - Design detected: vecshiftreg
+[2022-01-17 11:25:13.860] {eris_parser.py:81} INFO     - 
+
+[2022-01-17 11:25:13.863] {eris_parser.py:456} INFO     - Finished creating new rtl event file ./output/rtlevent.cc
+[2022-01-17 11:25:13.863] {eris_parser.py:456} INFO     - 
+
+[2022-01-17 11:25:13.863] {eris_parser.py:501} INFO     - Finished creating new rtl event header file ./output/rtlevent.h
+[2022-01-17 11:25:13.863] {eris_parser.py:501} INFO     - 
+
+[2022-01-17 11:25:13.863] {eris_parser.py:362} INFO     - Finished creating new rtl header file ./output/vecshiftreg.h
+[2022-01-17 11:25:13.863] {eris_parser.py:362} INFO     - 
+
+[2022-01-17 11:25:13.863] {eris_parser.py:363} INFO     - Finished creating new rtl component file ./output/vecshiftreg.cc
+[2022-01-17 11:25:13.863] {eris_parser.py:363} INFO     - 
+
+[2022-01-17 11:25:13.864] {eris_parser.py:246} INFO     - Finished creating new makefile ./output/Makefile.am
+[2022-01-17 11:25:13.864] {eris_parser.py:246} INFO     - 
+
