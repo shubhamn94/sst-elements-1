@@ -63,7 +63,7 @@ class RTL_shmem_info {
             free(updated_rtl_params);
         }
         size_t get_inp_size() { return rtl_inp_size; }
-        size_t get_ctrl_size() { return rtl_ctrl_size; }
+        //size_t get_ctrl_size() { return rtl_ctrl_size; }
         size_t get_params_size() { return params_size; }
         void* get_inp_ptr() { return rtl_inp_ptr; }
         void* get_ctrl_ptr() { return rtl_ctrl_ptr; }

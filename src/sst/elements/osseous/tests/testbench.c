@@ -29,9 +29,8 @@ int main(int argc, char *argv[]) {
   double *b = (double *)mlm_malloc(sizeof(double) * LENGTH, 0);
   double *fast_c = (double *)mlm_malloc(sizeof(double) * LENGTH, 0);
 
-  UInt<4> io_ins_0, io_ins_1, io_ins_2, io_ins_3, io_out;
-  UInt<1> io_load, io_shift;
-  UInt<4> *inp_ptr;
+  UInt<1> io_in, *inp_ptr; 
+  UInt<8> accumulator, *inp_ptr1;
   UInt<1> *ctrl_ptr;
 
   mlm_set_pool(1);
@@ -62,57 +61,60 @@ int main(int argc, char *argv[]) {
   mlm_Tag copy_tag = mlm_memcpy(c, fast_c, sizeof(double) * LENGTH);
   mlm_waitComplete(copy_tag);
 
-  io_shift = UInt<1>(1);
-  io_ins_0 = UInt<4>(2);
-  io_ins_1 = UInt<4>(5);
-  io_ins_2 = UInt<4>(6);
-  io_ins_3 = UInt<4>(7);
-  io_load = UInt<1>(0);
+  io_in = UInt<1>(1);
+  accumulator = UInt<8>(4); 
 
-  size_t inp_size = sizeof(UInt<4>) * 5;
-  size_t ctrl_size = sizeof(UInt<1>) * 2;
+  size_t inp_size = sizeof(UInt<8>) * 2;
+  size_t ctrl_size = sizeof(UInt<4>); //sizeof(UInt<1>) * 2;
   RTL_shmem_info *shmem = new RTL_shmem_info(inp_size, ctrl_size);
 
-  inp_ptr = (UInt<4>*)shmem->get_inp_ptr();
-  ctrl_ptr = (UInt<1>*)shmem->get_ctrl_ptr();
+  inp_ptr = (UInt<1>*)shmem->get_inp_ptr();
+  //ctrl_ptr = (UInt<1>*)shmem->get_ctrl_ptr();
 
-  ctrl_ptr[0] = io_shift;
-  ctrl_ptr[1] = io_load;
-  inp_ptr[0] = io_ins_0;
-  inp_ptr[1] = io_ins_1;
-  inp_ptr[2] = io_ins_2;
-  inp_ptr[3] = io_ins_3;
+  /*ctrl_ptr[0] = io_shift;
+  ctrl_ptr[1] = io_load;*/
+  inp_ptr[0] = io_in;
+  inp_ptr++;
+  UInt<8>* inp_pt = (UInt<8>*)inp_ptr;
+  inp_pt[0] = accumulator;
+  //inp_ptr[1] = io_ins_1;
+  //inp_ptr[2] = io_ins_2;
+  //inp_ptr[3] = io_ins_3;
 
   Update_RTL_Params *params = new Update_RTL_Params();
   params->storetomem(shmem);
   params->check(shmem);
-  ctrl_ptr[0] = io_shift;
-  ctrl_ptr[1] = io_load;
-  inp_ptr[0] = io_ins_0;
-  inp_ptr[1] = io_ins_1;
-  inp_ptr[2] = io_ins_2;
-  inp_ptr[3] = io_ins_3;
+  inp_ptr[0] = io_in;
+  inp_ptr++;
+  inp_pt = (UInt<8>*)inp_ptr;
+  inp_pt[0] = accumulator;
+
+  /*ctrl_ptr[0] = io_shift;
+  ctrl_ptr[1] = io_load;*/
+  //inp_ptr[0] = io_in;
+  //inp_ptr[2] = io_ins_2;
+  //inp_ptr[3] = io_ins_3;
   params->storetomem(shmem);
 
   start_RTL_sim(shmem);
   bool *check = (bool *)shmem->get_inp_ptr();
   printf("\nSimulation started\n");
 
-  io_load = UInt<1>(1);
-  ctrl_ptr[1] = io_load;
+  /*io_load = UInt<1>(1);
+  ctrl_ptr[1] = io_load;*/
 
   params->perform_update(false, true, true, true, true, false, false, 1);
   params->storetomem(shmem);
-  ctrl_ptr[1] = io_load;
+  //ctrl_ptr[1] = io_load;
   params->storetomem(shmem);
   update_RTL_sig(shmem);
 
-  io_load = UInt<1>(0);
-  ctrl_ptr[1] = io_load;
+  //io_load = UInt<1>(0);
+  //ctrl_ptr[1] = io_load;
 
-  params->perform_update(false, true, true, true, true, true, true, 10);
+  params->perform_update(false, true, true, true, true, true, true, 100);
   params->storetomem(shmem);
-  ctrl_ptr[1] = io_load;
+  //ctrl_ptr[1] = io_load;
   params->storetomem(shmem);
   update_RTL_sig(shmem);
 

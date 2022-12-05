@@ -1,61 +1,73 @@
-#ifndef VECSHIFTREGISTER_H_
-#define VECSHIFTREGISTER_H_
+#ifndef ACCUMULATOR_H_
+#define ACCUMULATOR_H_
 
-#include <iostream>
-#include <inttypes.h>
 #include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <uint.h>
 #include <sint.h>
-#include <sst/core/sst_config.h>
-#include "sst_config.h"
-namespace SST {
-//#define UNLIKELY(condition) __builtin_expect(static_cast<bool>(condition), 0)
+#define UNLIKELY(condition) __builtin_expect(static_cast<bool>(condition), 0)
+
 typedef struct Rtlheader {
-  UInt<4> delays_0;
-  UInt<4> delays_1;
-  UInt<4> delays_2;
-  UInt<4> delays_3;
+  UInt<8> accumulator;
   UInt<1> clock;
   UInt<1> reset;
-  UInt<4> io_ins_0;
-  UInt<4> io_ins_1;
-  UInt<4> io_ins_2;
-  UInt<4> io_ins_3;
-  UInt<1> io_load;
-  UInt<1> io_shift;
-  UInt<4> io_out;
+  UInt<1> io_in;
+  UInt<8> io_out;
 
-
-  Rtlheader() {
-    delays_0.rand_init();
-    delays_1.rand_init();
-    delays_2.rand_init();
-    delays_3.rand_init();
+  Accumulator() {
+    accumulator.rand_init();
     reset.rand_init();
-    io_ins_0.rand_init();
-    io_ins_1.rand_init();
-    io_ins_2.rand_init();
-    io_ins_3.rand_init();
-    io_load.rand_init();
-    io_shift.rand_init();
+    io_in.rand_init();
     io_out.rand_init();
   }
 
+  UInt<1> reset$old;
+  UInt<1> io_in$old;
+  std::array<bool,1> PARTflags;
+  bool sim_cached = false;
+  bool regs_set = false;
+  bool update_registers;
+  bool done_reset;
+  bool verbose;
+
+  void EVAL_0() {
+    PARTflags[0] = false;
+    io_out = accumulator;
+    printf("\nio_out is: %"PRIu8, io_out);
+    UInt<8> accumulator$next;
+    if (UNLIKELY(UNLIKELY(reset))) {
+      accumulator$next = UInt<8>(0x0);
+    } else {
+      UInt<8> _GEN_0 = io_in.pad<8>();
+      UInt<9> _T = accumulator + _GEN_0;
+      UInt<8> _T_1 = _T.tail<1>();
+      accumulator$next = _T_1;
+    }
+    PARTflags[0] |= accumulator != accumulator$next;
+    if (update_registers) accumulator = accumulator$next;
+  }
+
   void eval(bool update_registers, bool verbose, bool done_reset) {
-    UInt<4> _GEN_0 = io_shift ? io_ins_0 : delays_0;
-    UInt<4> _GEN_1 = io_shift ? delays_0 : delays_1;
-    UInt<4> _GEN_2 = io_shift ? delays_1 : delays_2;
-    UInt<4> _GEN_3 = io_shift ? delays_2 : delays_3;
-    io_out = delays_3;
-    if(update_registers)
-        printf("\nio_out: %"PRIu8, io_out);
-    if (update_registers) delays_0 = io_load ? io_ins_0 : _GEN_0;
-    if (update_registers) delays_1 = io_load ? io_ins_1 : _GEN_1;
-    if (update_registers) delays_2 = io_load ? io_ins_2 : _GEN_2;
-    if (update_registers) delays_3 = io_load ? io_ins_3 : _GEN_3;
+    if (reset || !done_reset) {
+      sim_cached = false;
+      regs_set = false;
+    }
+    if (!sim_cached) {
+      PARTflags.fill(true);
+    }
+    sim_cached = regs_set;
+    this->update_registers = update_registers;
+    this->done_reset = done_reset;
+    this->verbose = verbose;
+    PARTflags[0] |= reset != reset$old;
+    PARTflags[0] |= io_in != io_in$old;
+    reset$old = reset;
+    io_in$old = io_in;
+    printf("\nio_in is: %"PRIu8, io_in);
+    if (UNLIKELY(PARTflags[0])) EVAL_0();
+    regs_set = true;
   }
 } Rtlheader;
-} //namespace SST
-#endif  // VECSHIFTREGISTER_H_
+
+#endif  // ACCUMULATOR_H_
