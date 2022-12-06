@@ -12,7 +12,7 @@ typedef struct Rtlheader {
   UInt<8> accumulator;
   UInt<1> clock;
   UInt<1> reset;
-  UInt<1> io_in;
+  UInt<8> io_in;
   UInt<8> io_out;
 
   Accumulator() {
@@ -23,7 +23,7 @@ typedef struct Rtlheader {
   }
 
   UInt<1> reset$old;
-  UInt<1> io_in$old;
+  UInt<8> io_in$old;
   std::array<bool,1> PARTflags;
   bool sim_cached = false;
   bool regs_set = false;
@@ -35,6 +35,7 @@ typedef struct Rtlheader {
     PARTflags[0] = false;
     io_out = accumulator;
     printf("\nio_out is: %"PRIu8, io_out);
+    printf("\nio_in is: %" PRIu8, io_in);
     UInt<8> accumulator$next;
     if (UNLIKELY(UNLIKELY(reset))) {
       accumulator$next = UInt<8>(0x0);
@@ -64,7 +65,6 @@ typedef struct Rtlheader {
     PARTflags[0] |= io_in != io_in$old;
     reset$old = reset;
     io_in$old = io_in;
-    printf("\nio_in is: %"PRIu8, io_in);
     if (UNLIKELY(PARTflags[0])) EVAL_0();
     regs_set = true;
   }

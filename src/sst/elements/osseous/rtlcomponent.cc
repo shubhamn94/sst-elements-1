@@ -186,7 +186,7 @@ bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
 
     //output.verbose(CALL_INFO, 1, 0, "\nSim Done is: %d", ev.sim_done);
 
-    if(!isStalled) {
+    if(!isStalled && tickCount < sim_cycle) {
         dut->eval(ev.update_registers, ev.verbose, ev.done_reset);
         tickCount++;
     }

@@ -42,46 +42,18 @@ void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& 
         inp_ptr =  (void*)cycles_ptr; 
         input_sigs(cmodel);
     }
-#if 0
-    if(update_ctrl) {
-        UInt<4>* rtl_inp_ptr = (UInt<4>*)inp_ptr;
-        ctrl_ptr = (void*)(&rtl_inp_ptr[5]);
-        control_sigs(cmodel);
-    }
-#endif
 }
 
 void RTLEvent::input_sigs(Rtlheader* cmodel) {
 
     cmodel->reset = UInt<1>(1);
     //Cast all the variables to 4 byte UInt types for uniform storage for now. Later, we either will remove UInt and SInt and use native types. Even then we would need to cast the every variables based on type, width and order while storing in shmem and accordinly access it at runtime from shmem.   
-    UInt<1>* rtl_inp_ptr = (UInt<1>*)inp_ptr;
+    UInt<8>* rtl_inp_ptr = (UInt<8>*)inp_ptr;
     cmodel->io_in = rtl_inp_ptr[0];
-    rtl_inp_ptr++;
-    UInt<8>* inp_ptr = (UInt<8>*)rtl_inp_ptr; 
-    cmodel->accumulator = inp_ptr[0];
-    /*cmodel->io_ins_1 = rtl_inp_ptr[1];
-    cmodel->io_ins_2 = rtl_inp_ptr[2];
-    cmodel->io_ins_3 = rtl_inp_ptr[3];
+    printf("\nCmodel io_in is: %" PRIu8, cmodel->io_in);
+    cmodel->accumulator = rtl_inp_ptr[1];
+    printf("\nCmodel accumulator is: %" PRIu8, cmodel->accumulator);
     cmodel->reset = UInt<1>(0);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_ins_0);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_ins_1);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_ins_2);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_ins_3);*/
     output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_in);
     return;
 }
-
-/*void RTLEvent::control_sigs(Rtlheader* cmodel) {
-
-    output.verbose(CALL_INFO, 1, 0, "\nctrl_sigs called"); 
-    cmodel->reset = UInt<1>(1);
-    UInt<1>* rtl_ctrl_ptr = (UInt<1>*)ctrl_ptr;
-    cmodel->io_shift = rtl_ctrl_ptr[0];
-    cmodel->io_load = rtl_ctrl_ptr[1];
-    cmodel->reset = UInt<1>(0);
-    output.verbose(CALL_INFO, 1, 0, "ctrl_sigs: %lu", cmodel->io_shift);
-    output.verbose(CALL_INFO, 1, 0, "ctrl_sigs: %lu", cmodel->io_load);
-    return;
-}*/
-

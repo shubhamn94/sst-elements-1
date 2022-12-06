@@ -19,6 +19,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <inttypes.h>
+#include <sint.h>
+#include <uint.h>
 
 #if defined(c_plusplus) || defined(__cplusplus)
 extern "C" {
@@ -68,6 +70,12 @@ class RTL_shmem_info {
         void* get_inp_ptr() { return rtl_inp_ptr; }
         void* get_ctrl_ptr() { return rtl_ctrl_ptr; }
         void* get_updated_rtl_params() { return updated_rtl_params; }
+        
+        void print() {
+           UInt<8>* inp_ptr = (UInt<8>*)rtl_inp_ptr;
+           printf("\ninp_ptr is: %" PRIu8, inp_ptr[0]);
+           printf("\naccumulator is: %" PRIu8, inp_ptr[1]);
+        }
 };
 
 class Update_RTL_Params {
