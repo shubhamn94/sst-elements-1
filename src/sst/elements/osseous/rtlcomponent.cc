@@ -25,7 +25,7 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 	SST::Component(id)/*, verbosity(static_cast<uint32_t>(out->getVerboseLevel()))*/ {
 
     bool found;
-    dut = new Rtlheader;
+    accumulator = new Accumulator();
     axiport = new AXITop;
     RtlAckEv = new ArielComponent::ArielRtlEvent();
 	output.init("Rtlmodel-" + getName() + "-> ", 1, 0, SST::Output::STDOUT);
@@ -115,19 +115,11 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 }
 
 Rtlmodel::~Rtlmodel() {
-    delete dut;
+    delete accumulator;
     delete axiport;
 }
 
-void Rtlmodel::setup() {
-    dut->reset = UInt<1>(1);
-    axiport->reset = UInt<1>(1);
-	output.verbose(CALL_INFO, 1, 0, "Component is being setup.\n");
-    for(int i = 0; i < 512; i++)
-        axiport->queue.ram[i] = 0;
-    axiport->eval(true,true,true);
-    axiport->reset = UInt<1>(0);
-}
+void Rtlmodel::setup() { }
 
 void Rtlmodel::init(unsigned int phase) {
 	output.verbose(CALL_INFO, 1, 0, "Component Init Phase Called %d\n", phase);
@@ -187,7 +179,9 @@ bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
     //output.verbose(CALL_INFO, 1, 0, "\nSim Done is: %d", ev.sim_done);
 
     if(!isStalled && tickCount < sim_cycle) {
-        dut->eval(ev.update_registers, ev.verbose, ev.done_reset);
+        //accumulator->eval(ev.update_registers, ev.verbose, ev.done_reset);
+        accumulator->attach(10);
+        accumulator->eval();
         tickCount++;
     }
 	if( tickCount >= sim_cycle) {
@@ -312,7 +306,7 @@ void Rtlmodel::handleMemEvent(StandardMem::Request* event) {
         pending_transaction_count--;
 
         if(isStalled && pending_transaction_count == 0) {
-            ev.UpdateRtlSignals((void*)getBaseDataAddress(), dut, sim_cycle);
+            ev.UpdateRtlSignals((void*)getBaseDataAddress(), accumulator, sim_cycle);
             tickCount = 0;
             reregisterClock(timeConverter, clock_handler);
             setDataAddress(getBaseDataAddress());

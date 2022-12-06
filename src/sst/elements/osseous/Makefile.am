@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 #
 #
-INCLUDE = -I$(top_srcdir)/src/sst/elements/osseous/eras_datatypes/ -I$(top_srcdir)/src/sst/elements/ariel/
+INCLUDE = -I$(top_srcdir)/src/sst/elements/osseous/eras_datatypes/ -I$(top_srcdir)/src/sst/elements/ariel/ -I$(top_srcdir)/src/sst/elements/osseous/obj_dir/
 FLAGS = -fpermissive -std=c++11
 
 AM_CPPFLAGS += \
@@ -10,7 +10,7 @@ AM_CPPFLAGS += \
 	$(FLAGS)
 
 compdir = $(pkglibdir)
-comp_LTLIBRARIES = librtlcomponent.la
+comp_LTLIBRARIES = librtlcomponent.la libaccumulator.a
 librtlcomponent_la_SOURCES = \
 	rtlcomponent.h \
 	rtlcomponent.cc \
@@ -32,8 +32,7 @@ EXTRA_DIST = \
 			 tests/tb_header.h \
 			 tests/tb_header.c \
 			 tests/testbench.c \
-			 tests/runstream.py
-
+			 tests/runstream.py 
 
 librtlcomponent_la_LDFLAGS = -module -avoid-version
 

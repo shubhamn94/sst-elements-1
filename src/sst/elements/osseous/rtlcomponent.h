@@ -28,6 +28,7 @@
 #include "rtlwriteev.h"
 #include "rtlmemmgr.h"
 #include "AXI_port.h"
+#include <accumulator.h>
 
 namespace SST {
     namespace RtlComponent {
@@ -113,7 +114,8 @@ private:
     bool update_registers, verbose, done_reset, sim_done;
     bool update_inp, update_ctrl, update_eval_args;
     RTLEvent ev;
-    Rtlheader *dut;
+    //Rtlheader *dut;
+    Accumulator* accumulator;
     AXITop *axiport;
     ArielComponent::ArielRtlEvent* RtlAckEv;
     uint64_t inp_VA, ctrl_VA, updated_rtl_params_VA, inp_PA, ctrl_PA, updated_rtl_params_PA;
