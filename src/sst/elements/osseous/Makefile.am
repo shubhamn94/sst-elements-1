@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 #
 #
-INCLUDE = -I$(top_srcdir)/src/sst/elements/osseous/eras_datatypes/ -I$(top_srcdir)/src/sst/elements/ariel/ -I$(top_srcdir)/src/sst/elements/osseous/obj_dir/
+INCLUDE = -I$(top_srcdir)/src/sst/elements/osseous/eras_datatypes/ -I$(top_srcdir)/src/sst/elements/ariel/ 
 FLAGS = -fpermissive -std=c++11
 
 AM_CPPFLAGS += \
@@ -10,7 +10,9 @@ AM_CPPFLAGS += \
 	$(FLAGS)
 
 compdir = $(pkglibdir)
-comp_LTLIBRARIES = librtlcomponent.la libaccumulator.a
+comp_LTLIBRARIES = librtlcomponent.la
+comp_LTLIBRARIES += libaccumulator.a
+
 librtlcomponent_la_SOURCES = \
 	rtlcomponent.h \
 	rtlcomponent.cc \
@@ -34,7 +36,8 @@ EXTRA_DIST = \
 			 tests/testbench.c \
 			 tests/runstream.py 
 
-librtlcomponent_la_LDFLAGS = -module -avoid-version
+librtlcomponent_la_LDFLAGS = -module -avoid-version 
+libaccumulator_a_LDFLAGS = -L$(top_srcdir)/src/sst/elements/osseous/ -laccumulator 
 
 install-exec-hook:
 	$(SST_REGISTER_TOOL) rtlcomponent  rtlcomponent_LIBDIR=$(abs_srcdir)

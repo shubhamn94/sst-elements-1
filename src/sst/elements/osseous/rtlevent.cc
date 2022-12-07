@@ -21,7 +21,7 @@
 using namespace SST;
 using namespace SST::RtlComponent;
 
-void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& cycles) {
+void RTLEvent::UpdateRtlSignals(void *update_data, uint64_t& cycles) {
     bool* update_rtl_params = (bool*)update_data; 
     update_inp = update_rtl_params[0];
     update_ctrl = update_rtl_params[1];
@@ -40,13 +40,13 @@ void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& 
     output.verbose(CALL_INFO, 1, 0, "update_ctrl: %d\n", update_ctrl);
     if(update_inp) {
         inp_ptr =  (void*)cycles_ptr; 
-        input_sigs(cmodel);
+        //input_sigs(cmodel);
     }
 }
 
 void RTLEvent::input_sigs(Rtlheader* cmodel) {
 
-    cmodel->reset = UInt<1>(1);
+    /*cmodel->reset = UInt<1>(1);
     //Cast all the variables to 4 byte UInt types for uniform storage for now. Later, we either will remove UInt and SInt and use native types. Even then we would need to cast the every variables based on type, width and order while storing in shmem and accordinly access it at runtime from shmem.   
     UInt<8>* rtl_inp_ptr = (UInt<8>*)inp_ptr;
     cmodel->io_in = rtl_inp_ptr[0];
@@ -54,6 +54,6 @@ void RTLEvent::input_sigs(Rtlheader* cmodel) {
     cmodel->accumulator = rtl_inp_ptr[1];
     printf("\nCmodel accumulator is: %" PRIu8, cmodel->accumulator);
     cmodel->reset = UInt<1>(0);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_in);
+    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_in);*/
     return;
 }

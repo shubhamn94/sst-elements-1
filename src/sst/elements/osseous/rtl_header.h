@@ -15,7 +15,7 @@ typedef struct Rtlheader {
   UInt<8> io_in;
   UInt<8> io_out;
 
-  Accumulator() {
+  Rtlheader() {
     accumulator.rand_init();
     reset.rand_init();
     io_in.rand_init();

@@ -6,10 +6,9 @@ class Accumulator {
 public:
     Accumulator();
     ~Accumulator();
-    
-    void eval();
-    void attach();
 
+    void eval();
+    void attach(uint32_t input);
 };
 
 #endif // COMPARATOR_SS_H

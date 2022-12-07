@@ -115,7 +115,7 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 }
 
 Rtlmodel::~Rtlmodel() {
-    delete accumulator;
+    //delete accumulator;
     delete axiport;
 }
 
@@ -306,7 +306,7 @@ void Rtlmodel::handleMemEvent(StandardMem::Request* event) {
         pending_transaction_count--;
 
         if(isStalled && pending_transaction_count == 0) {
-            ev.UpdateRtlSignals((void*)getBaseDataAddress(), accumulator, sim_cycle);
+            ev.UpdateRtlSignals((void*)getBaseDataAddress(), sim_cycle);
             tickCount = 0;
             reregisterClock(timeConverter, clock_handler);
             setDataAddress(getBaseDataAddress());

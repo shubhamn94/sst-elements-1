@@ -28,7 +28,7 @@
 #include "rtlwriteev.h"
 #include "rtlmemmgr.h"
 #include "AXI_port.h"
-#include <accumulator.h>
+#include "accumulator.h"
 
 namespace SST {
     namespace RtlComponent {

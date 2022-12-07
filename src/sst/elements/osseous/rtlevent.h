@@ -42,7 +42,7 @@ public:
 
     void input_sigs(Rtlheader*);
     void control_sigs(Rtlheader*);
-    void UpdateRtlSignals(void*, Rtlheader*, uint64_t&);
+    void UpdateRtlSignals(void*, uint64_t&);
     void *inp_ptr, *ctrl_ptr;
 
     void serialize_order(SST::Core::Serialization::serializer &ser)  override {
