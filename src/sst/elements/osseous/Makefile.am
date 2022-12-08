@@ -11,7 +11,7 @@ AM_CPPFLAGS += \
 
 compdir = $(pkglibdir)
 comp_LTLIBRARIES = librtlcomponent.la
-comp_LTLIBRARIES += libaccumulator.a
+#comp_LTLIBRARIES += libaccumulator.a
 
 librtlcomponent_la_SOURCES = \
 	rtlcomponent.h \
@@ -36,8 +36,8 @@ EXTRA_DIST = \
 			 tests/testbench.c \
 			 tests/runstream.py 
 
-librtlcomponent_la_LDFLAGS = -module -avoid-version 
-libaccumulator_a_LDFLAGS = -L$(top_srcdir)/src/sst/elements/osseous/ -laccumulator 
+librtlcomponent_la_LDFLAGS = -module -avoid-version -L$$(realpath .) -laccumulator
+#libaccumulator_a_LDFLAGS = -L$(top_srcdir)/src/sst/elements/osseous/ -laccumulator 
 
 install-exec-hook:
 	$(SST_REGISTER_TOOL) rtlcomponent  rtlcomponent_LIBDIR=$(abs_srcdir)

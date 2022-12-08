@@ -115,7 +115,7 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 }
 
 Rtlmodel::~Rtlmodel() {
-    //delete accumulator;
+    delete accumulator;
     delete axiport;
 }
 
