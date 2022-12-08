@@ -21,6 +21,7 @@
 #include <sst/core/simulation.h>
 #include <string>
 #include <sst/core/event.h>
+#include "mm.h"
 using namespace SST;
 using namespace std;
 
@@ -40,9 +41,9 @@ public:
         output = SST::Simulation::getSimulation()->getSimulationOutput();
     }
 
-    void input_sigs(Rtlheader*);
-    void control_sigs(Rtlheader*);
-    void UpdateRtlSignals(void*, Rtlheader*, uint64_t&);
+    void input_sigs(Rtlheader*, mm_magic_t*);
+    //void control_sigs(Rtlheader*, void*);
+    void UpdateRtlSignals(void*, Rtlheader*, uint64_t&, mm_magic_t*);
     void *inp_ptr, *ctrl_ptr;
 
     void serialize_order(SST::Core::Serialization::serializer &ser)  override {

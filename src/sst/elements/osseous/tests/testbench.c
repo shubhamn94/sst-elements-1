@@ -18,9 +18,19 @@
 #include <utility>
 #include <vector>
 #include <inttypes.h>
+#include <iostream>
+#include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#include <uint.h> 
+#include <fstream>
+
+using namespace std;
+
 int main(int argc, char *argv[]) {
 
   const int LENGTH = 32768;
+  int start = 0;
 
   ariel_enable();
 
@@ -29,9 +39,10 @@ int main(int argc, char *argv[]) {
   double *b = (double *)mlm_malloc(sizeof(double) * LENGTH, 0);
   double *fast_c = (double *)mlm_malloc(sizeof(double) * LENGTH, 0);
 
-  UInt<8> io_in, *inp_ptr; 
-  UInt<8> accumulator, *inp_ptr1;
+  UInt<1> reset;
+  char* inp_ptr;
   UInt<1> *ctrl_ptr;
+  UInt<32> *ctrl_pt;
 
   mlm_set_pool(1);
 
@@ -57,41 +68,69 @@ int main(int argc, char *argv[]) {
     fast_c[i] = 2.0 * a[i] + 1.5 * b[i];
   }
 
-  // Now copy results back
-  mlm_Tag copy_tag = mlm_memcpy(c, fast_c, sizeof(double) * LENGTH);
-  mlm_waitComplete(copy_tag);
+  reset = UInt<1>(1);
 
-  io_in = UInt<8>(1);
-  accumulator = UInt<8>(4); 
-
-  size_t inp_size = sizeof(UInt<8>) * 2;
-  size_t ctrl_size = sizeof(UInt<4>); //sizeof(UInt<1>) * 2;
+  size_t inp_size = 1L << 32; 
+  size_t ctrl_size = sizeof(UInt<32>) * 3; 
   RTL_shmem_info *shmem = new RTL_shmem_info(inp_size, ctrl_size);
 
-  inp_ptr = (UInt<8>*)shmem->get_inp_ptr();
+  inp_ptr = (char *)shmem->get_inp_ptr();
+  ctrl_ptr = (UInt<1>*)shmem->get_ctrl_ptr();
+  ctrl_pt = (UInt<32>*)ctrl_ptr;
+  ctrl_pt++;
 
-  inp_ptr[0] = io_in;
-  inp_ptr[1] = accumulator;
+  std::ifstream in("multiply.riscv.hex");
+  if (!in) {
+    std::cout << "could not open " << "multiply.riscv.hex" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  //uint64_t cnt = 0;
+  std::string line;
+  while (std::getline(in, line)) {
+    #define parse_nibble(c) ((c) >= 'a' ? (c)-'a'+10 : (c)-'0')
+    for (int i = line.length()-2, j = 0; i >= 0; i -= 2, j++) {
+      inp_ptr[start + j] = (parse_nibble(line[i]) << 4) | parse_nibble(line[i+1]);
+      //cnt++;
+    }
+    start += line.length()/2;
+  }
+
+  //printf("\nCounter is: %ld", cnt);
 
   Update_RTL_Params *params = new Update_RTL_Params();
+  ctrl_ptr[0] = reset;
   params->storetomem(shmem);
+  ctrl_ptr[0] = reset;
   params->check(shmem);
-  inp_ptr[0] = io_in;
-  inp_ptr[1] = accumulator;
-
   params->storetomem(shmem);
 
+  ariel_fence();
   start_RTL_sim(shmem);
   bool *check = (bool *)shmem->get_inp_ptr();
   printf("\nSimulation started\n");
 
-  params->perform_update(false, true, true, true, true, false, false, 1);
+  reset = UInt<1>(0);
+  params->perform_update(false, true, true, true, true, false, false, 5);
   params->storetomem(shmem);
   params->check(shmem);
-  inp_ptr[0] = io_in;
-  inp_ptr[1] = accumulator;
-
   params->storetomem(shmem);
+  ariel_fence();
+  update_RTL_sig(shmem);
+
+  ctrl_ptr[0] = reset;
+  ctrl_pt[0] = UInt<32>(0); 
+  ctrl_pt[1] = UInt<32>(0); 
+  /*ctrl_ptr[0] = reset;
+  ctrl_pt[0] = UInt<32>(0); 
+  ctrl_pt[1] = UInt<32>(0); */
+
+
+  params->perform_update(false, true, true, true, true, true, false, 1000L);
+  params->storetomem(shmem);
+  params->check(shmem);
+  params->storetomem(shmem);
+  ariel_fence();
   update_RTL_sig(shmem);
 
   params->perform_update(false, true, true, true, true, true, true, 10);
@@ -99,6 +138,9 @@ int main(int argc, char *argv[]) {
   params->storetomem(shmem);
   update_RTL_sig(shmem);
 
+  // Now copy results back
+  mlm_Tag copy_tag = mlm_memcpy(c, fast_c, sizeof(double) * LENGTH);
+  mlm_waitComplete(copy_tag);
 
   double sum = 0;
   for (i = 0; i < LENGTH; ++i) {

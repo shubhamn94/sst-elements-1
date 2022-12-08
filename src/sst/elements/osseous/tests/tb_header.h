@@ -65,7 +65,7 @@ class RTL_shmem_info {
             free(updated_rtl_params);
         }
         size_t get_inp_size() { return rtl_inp_size; }
-        //size_t get_ctrl_size() { return rtl_ctrl_size; }
+        size_t get_ctrl_size() { return rtl_ctrl_size; }
         size_t get_params_size() { return params_size; }
         void* get_inp_ptr() { return rtl_inp_ptr; }
         void* get_ctrl_ptr() { return rtl_ctrl_ptr; }
@@ -85,7 +85,7 @@ class Update_RTL_Params {
         uint64_t sim_cycles;
     
     public:
-        Update_RTL_Params(bool inp = true, bool ctrl = true, bool eval_args = true, bool reg = false, bool verb = true, bool done_rst = false, bool done = false, uint64_t cycles = 5) {
+        Update_RTL_Params(bool inp = true, bool ctrl = true, bool eval_args = true, bool reg = true, bool verb = false, bool done_rst = false, bool done = false, uint64_t cycles = 5) {
             update_inp = inp;
             update_ctrl = ctrl;
             update_eval_args = eval_args;

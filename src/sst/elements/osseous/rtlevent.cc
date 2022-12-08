@@ -21,7 +21,7 @@
 using namespace SST;
 using namespace SST::RtlComponent;
 
-void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& cycles) {
+void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& cycles, mm_magic_t* mem) {
     bool* update_rtl_params = (bool*)update_data; 
     update_inp = update_rtl_params[0];
     update_ctrl = update_rtl_params[1];
@@ -40,20 +40,44 @@ void RTLEvent::UpdateRtlSignals(void *update_data, Rtlheader* cmodel, uint64_t& 
     output.verbose(CALL_INFO, 1, 0, "update_ctrl: %d\n", update_ctrl);
     if(update_inp) {
         inp_ptr =  (void*)cycles_ptr; 
-        input_sigs(cmodel);
+        input_sigs(cmodel, mem);
     }
+
+    /*if(update_ctrl) {
+        UInt<1>* rtl_inp_ptr = (UInt<1>*)inp_ptr;
+        ctrl_ptr = (void*)(&rtl_inp_ptr);
+        control_sigs(cmodel);
+    }*/
 }
 
-void RTLEvent::input_sigs(Rtlheader* cmodel) {
+void RTLEvent::input_sigs(Rtlheader* cmodel, mm_magic_t* mem) {
 
-    cmodel->reset = UInt<1>(1);
-    //Cast all the variables to 4 byte UInt types for uniform storage for now. Later, we either will remove UInt and SInt and use native types. Even then we would need to cast the every variables based on type, width and order while storing in shmem and accordinly access it at runtime from shmem.   
-    UInt<8>* rtl_inp_ptr = (UInt<8>*)inp_ptr;
-    cmodel->io_in = rtl_inp_ptr[0];
-    printf("\nCmodel io_in is: %" PRIu8, cmodel->io_in);
-    cmodel->accumulator = rtl_inp_ptr[1];
-    printf("\nCmodel accumulator is: %" PRIu8, cmodel->accumulator);
-    cmodel->reset = UInt<1>(0);
-    output.verbose(CALL_INFO, 1, 0, "input_sigs: %lu", cmodel->io_in);
+    uint32_t i = 0;
+    //load_mem(mem->get_data(), (const char*)inp_ptr); 
+    char* inp_pt = (char*)inp_ptr;
+    while(i < 9536) {
+        mem->get_data()[i++] = *inp_pt;
+        //printf("\nHex char is: %c", *inp_pt);
+        //output.verbose(CALL_INFO, 1, 0, "\nhex char is: %s", *inp_pt);
+        inp_pt++;
+    }
+    inp_ptr = (void*)&inp_pt;
     return;
 }
+
+/*void RTLEvent::control_sigs(Rtlheader* cmodel, void* ctrl_ptr) {
+     output.verbose(CALL_INFO, 1, 0, "\nctrl_sigs called"); 
+     UInt<1>* rtl_ctrl_ptr = (UInt<1>*)ctrl_ptr;
+     cmodel->reset = rtl_ctrl_ptr[0];
+     rtl_ctrl_ptr++;
+     UInt<32>* ctrl_pt = (UInt<32>*)rtl_ctrl_ptr;
+     cmodel->io_host_fromhost_bits = ctrl_pt[0];
+     ctrl_pt++;
+     UInt<1>* t = (UInt<1>*)ctrl_pt;
+     cmodel->io_host_fromhost_valid = *t;
+     printf("\n ctrl_sig: %" PRIu64, cmodel->io_host_fromhost_bits.as_single_word());
+     printf("\n ctrl_sig: %" PRIu64, cmodel->io_host_fromhost_valid.as_single_word());
+     return;
+ }*/
+
+

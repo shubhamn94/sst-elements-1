@@ -22,8 +22,10 @@ librtlcomponent_la_SOURCES = \
 	rtlmemmgr_simple.cc \
 	rtl_header.h \
 	rtlreadev.h \
-	AXI_port.h \
-	rtlwriteev.h 
+	rtlwriteev.h \
+	Tile.h \
+	mm.h \
+	mm.cc
 
 EXTRA_DIST = \
 			 eras_datatypes/sint.h \
@@ -33,7 +35,6 @@ EXTRA_DIST = \
 			 tests/tb_header.c \
 			 tests/testbench.c \
 			 tests/runstream.py
-
 
 librtlcomponent_la_LDFLAGS = -module -avoid-version
 

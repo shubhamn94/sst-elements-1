@@ -14,6 +14,9 @@ tb_header.o: tb_header.c tb_header.h
 libtb_header.so: tb_header.o
 	$(CXX) -shared -O3 -fPIC -o libtb_header.so tb_header.o
 
+#libmm.so: mm.h mm.c
+#	$(CXX) -c -O3 -o mm.o -I./ -I$(INCLUDE) -fPIC mm.c
+
 libtb_header.a: tb_header.o
 	ar rcs $@ $^
 

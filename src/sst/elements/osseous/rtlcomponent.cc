@@ -25,8 +25,8 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 	SST::Component(id)/*, verbosity(static_cast<uint32_t>(out->getVerboseLevel()))*/ {
 
     bool found;
-    dut = new Rtlheader;
-    axiport = new AXITop;
+    top = new Rtlheader;
+    mem = new mm_magic_t(1L << 32, 8);
     RtlAckEv = new ArielComponent::ArielRtlEvent();
 	output.init("Rtlmodel-" + getName() + "-> ", 1, 0, SST::Output::STDOUT);
 
@@ -115,18 +115,12 @@ Rtlmodel::Rtlmodel(SST::ComponentId_t id, SST::Params& params) :
 }
 
 Rtlmodel::~Rtlmodel() {
-    delete dut;
-    delete axiport;
+    delete top;
+    delete mem;
 }
 
 void Rtlmodel::setup() {
-    dut->reset = UInt<1>(1);
-    axiport->reset = UInt<1>(1);
 	output.verbose(CALL_INFO, 1, 0, "Component is being setup.\n");
-    for(int i = 0; i < 512; i++)
-        axiport->queue.ram[i] = 0;
-    axiport->eval(true,true,true);
-    axiport->reset = UInt<1>(0);
 }
 
 void Rtlmodel::init(unsigned int phase) {
@@ -143,51 +137,19 @@ void Rtlmodel::finish() {
 //clockTick will actually execute the RTL design at every cycle based on the input and control signals updated by CPU CPU or Event Handler.
 bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
 
-    /*if(!isStalled) {
-        if(tickCount == 4) {
-            output.verbose(CALL_INFO, 1, 0, "AXI signals changed"); 
-            axi_tvalid_$next = 1;
-            axi_tdata_$next = 34;
-            output.verbose(CALL_INFO, 1, 0, "\n Sending data at tickCount 4");
-        }
-    }
-
-    if((axi_tvalid_$old ^ axi_tvalid_$next) || (axi_tdata_$old ^ axi_tdata_$next))  {
-        uint8_t ready = 1;
-        output.verbose(CALL_INFO, 1, 0, "handleAXISignals called"); 
-        if(axiport->queue.maybe_full) 
-            ready = 0;
-        handleAXISignals(ready); 
-        axiport->eval(true, true, true);
-
-        //Initial value of AXI control signals
-        fifo_enq_$old = axiport->queue.value_1.as_single_word();
-        fifo_enq_$next = axiport->queue.value.as_single_word();
-        uint64_t prev_data = axiport->queue.ram[fifo_enq_$old].as_single_word();
-
-        while(!(prev_data ^ axiport->queue.ram[fifo_enq_$next].as_single_word())) {
-            prev_data = axiport->queue.ram[fifo_enq_$next].as_single_word();
-            axiport->eval(true, true, true);
-            fifo_enq_$next = axiport->queue.value.as_single_word();
-            if(fifo_enq_$old ^ fifo_enq_$next) {
-                output.verbose(CALL_INFO, 1, 0, "\nQueue_value is: % %" PRIu64 PRIu64, axiport->queue.value, fifo_enq_$next); 
-                output.verbose(CALL_INFO, 1, 0, "\nData enqueued in the queue: %" PRIu64, axiport->queue.ram[fifo_enq_$next]);
-            }
-            fifo_enq_$old = fifo_enq_$next;
-        }
-    }
-
-    axi_tdata_$old = axi_tdata_$next;
-    axi_tvalid_$old = axi_tvalid_$next;
-    axi_tready_$old = axi_tready_$next;
-
-    uint64_t read_addr = (axiport->queue.ram[fifo_enq_$next].as_single_word());// << 32) | (axiport->queue.ram[fifo_enq_$next+1].as_single_word());
-    uint64_t size = (axiport->queue.ram[fifo_enq_$next+2].as_single_word());// << 32) | (axiport->queue.ram[fifo_enq_$next+3].as_single_word());*/
-
     //output.verbose(CALL_INFO, 1, 0, "\nSim Done is: %d", ev.sim_done);
 
-    if(!isStalled && tickCount < sim_cycle) {
-        dut->eval(ev.update_registers, ev.verbose, ev.done_reset);
+    if(!isStalled && tickCount < sim_cycle && !top->io_host_tohost.as_single_word()) {
+        if(tickCount < 5 && !fl) {
+            top->reset = UInt<1>(1);
+            fl = 1;
+        }
+        if(tickCount == 5) {
+            top->reset = UInt<1>(0);
+            top->io_host_fromhost_bits = UInt<32>(0);
+            top->io_host_fromhost_valid = UInt<1>(0);
+        }
+        tick(ev.update_registers, ev.verbose);
         tickCount++;
     }
 	if( tickCount >= sim_cycle) {
@@ -201,6 +163,42 @@ bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
 	} 
     
     return false;
+}
+
+void Rtlmodel::tick(bool verbose, bool done_reset) {
+  
+  top->io_nasti_aw_ready = UInt<1>(mem->aw_ready());
+  top->io_nasti_ar_ready = UInt<1>(mem->ar_ready());
+  top->io_nasti_w_ready = UInt<1>(mem->w_ready());
+  top->io_nasti_b_valid = UInt<1>(mem->b_valid());
+  top->io_nasti_b_bits_id = UInt<5>(mem->b_id());
+  top->io_nasti_b_bits_resp = UInt<2>(mem->b_resp());
+  top->io_nasti_r_valid = UInt<1>(mem->r_valid());
+  top->io_nasti_r_bits_id = UInt<5>(mem->r_id());
+  top->io_nasti_r_bits_resp = UInt<2>(mem->r_resp());
+  top->io_nasti_r_bits_last = UInt<1>(mem->r_last());
+  memcpy(&top->io_nasti_r_bits_data, mem->r_data(), 8);
+
+  top->eval(true, verbose, done_reset);
+  mem->tick(
+    top->reset, 
+    top->io_nasti_ar_valid, 
+    top->io_nasti_ar_bits_addr.as_single_word(), 
+    top->io_nasti_ar_bits_id.as_single_word(), 
+    top->io_nasti_ar_bits_size.as_single_word(), 
+    top->io_nasti_ar_bits_len.as_single_word(), 
+    top->io_nasti_aw_valid, 
+    top->io_nasti_aw_bits_addr.as_single_word(), 
+    top->io_nasti_aw_bits_id.as_single_word(), 
+    top->io_nasti_aw_bits_size.as_single_word(), 
+    top->io_nasti_aw_bits_len.as_single_word(), 
+    top->io_nasti_w_valid, 
+    top->io_nasti_w_bits_strb.as_single_word(), 
+    &top->io_nasti_w_bits_data, 
+    top->io_nasti_w_bits_last, 
+    top->io_nasti_r_ready, 
+    top->io_nasti_b_ready 
+  );
 }
 
 
@@ -230,6 +228,7 @@ void Rtlmodel::handleArielEvent(SST::Event *event) {
     //Update all the virtual address pointers in RTLEvent class
     updated_rtl_params = ariel_ev->get_updated_rtl_params();
     inp_ptr = ariel_ev->get_rtl_inp_ptr(); 
+    ctrl_ptr = ariel_ev->get_rtl_ctrl_ptr();
     inp_size = ariel_ev->RtlData.rtl_inp_size;
     cacheLineSize = ariel_ev->RtlData.cacheLineSize;
 
@@ -272,16 +271,6 @@ void Rtlmodel::sendArielEvent() {
 }
 
 
-void Rtlmodel::handleAXISignals(uint8_t tready) {
-    axiport->readerFrontend.done = 0;
-    axiport->readerFrontend.enable = 1;
-    axiport->readerFrontend.length = 64;
-    axiport->io_read_tdata = axi_tdata_$next; 
-    axiport->io_read_tvalid = axi_tvalid_$next; 
-    axiport->io_read_tready = tready; 
-    //axiport->cmd_queue.push('r');
-}
-
 void Rtlmodel::handleMemEvent(StandardMem::Request* event) {
     StandardMem::ReadResp* read = (StandardMem::ReadResp*)event;
     output.verbose(CALL_INFO, 4, 0, " handling a memory event in RtlModel.\n");
@@ -298,6 +287,11 @@ void Rtlmodel::handleMemEvent(StandardMem::Request* event) {
         else
             output.fatal(CALL_INFO, -1, "Error: DataAddress corresponding to VA: %" PRIu64, read->vAddr);
 
+        /*if(read->vAddr == (uint64_t)ctrl_ptr) {
+            phys_ctrl_ptr = (void*)&getBaseDataAddress()[i];
+            output.verbose(CALL_INFO, 1, 0, "Updated Control Params is: %d\n",(uint64_t)phys_ctrl_ptr);
+        }*/
+
         //Actual reading of data from memEvent and storing it to getDataAddress
         output.verbose(CALL_INFO, 1, 0, "\nAddress is: %" PRIu64, (uint64_t)getDataAddress());
         for(i = 0; i < read->data.size(); i++)
@@ -312,7 +306,8 @@ void Rtlmodel::handleMemEvent(StandardMem::Request* event) {
         pending_transaction_count--;
 
         if(isStalled && pending_transaction_count == 0) {
-            ev.UpdateRtlSignals((void*)getBaseDataAddress(), dut, sim_cycle);
+            ev.UpdateRtlSignals((void*)getBaseDataAddress(), top, sim_cycle, mem);
+            //ev.control_sigs(top, phys_ctrl_ptr);
             tickCount = 0;
             reregisterClock(timeConverter, clock_handler);
             setDataAddress(getBaseDataAddress());
@@ -501,11 +496,6 @@ void Rtlmodel::generateWriteRequest(RtlWriteEvent* wEv) {
 uint8_t* Rtlmodel::getDataAddress() {
     return dataAddress;
 }
-
-uint64_t* Rtlmodel::getAXIDataAddress() {
-    return AXIdataAddress;
-}
-
 
 void Rtlmodel::setDataAddress(uint8_t* virtAddress){
     dataAddress = virtAddress;

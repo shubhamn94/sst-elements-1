@@ -27,7 +27,6 @@
 #include "rtlreadev.h"
 #include "rtlwriteev.h"
 #include "rtlmemmgr.h"
-#include "AXI_port.h"
 
 namespace SST {
     namespace RtlComponent {
@@ -101,11 +100,10 @@ private:
 
     void handleArielEvent(SST::Event *ev);
     void handleMemEvent(Interfaces::StandardMem::Request* event);
-    void handleAXISignals(uint8_t);
     void commitReadEvent(const uint64_t address, const uint64_t virtAddr, const uint32_t length);
     void commitWriteEvent(const uint64_t address, const uint64_t virtAddr, const uint32_t length, const uint8_t* payload);
     void sendArielEvent();
-    uint64_t* getAXIDataAddress();
+    void tick(bool, bool);
     
     TimeConverter* timeConverter;
     Clock::HandlerBase* clock_handler;
@@ -113,25 +111,21 @@ private:
     bool update_registers, verbose, done_reset, sim_done;
     bool update_inp, update_ctrl, update_eval_args;
     RTLEvent ev;
-    Rtlheader *dut;
-    AXITop *axiport;
+    Rtlheader *top;
+    mm_magic_t* mem;
+
     ArielComponent::ArielRtlEvent* RtlAckEv;
     uint64_t inp_VA, ctrl_VA, updated_rtl_params_VA, inp_PA, ctrl_PA, updated_rtl_params_PA;
     size_t inp_size, ctrl_size, updated_rtl_params_size;
     std::queue<char> cmd_queue;
     void* inp_ptr = nullptr;
     void* updated_rtl_params = nullptr;
+    void* ctrl_ptr = nullptr;
+    void* phys_ctrl_ptr = nullptr;
     RtlMemoryManager* memmgr;
     bool mem_allocated = false;
     uint64_t sim_cycle;
-
-    //AXI Handler signals
-    uint64_t axi_tdata_$old = 0, axi_tdata_$next = 0;
-    uint8_t axi_tvalid_$old = 0, axi_tvalid_$next = 0;
-    uint8_t axi_tready_$old = 0, axi_tready_$next = 0;
-    uint64_t axi_fifo_enq_$old = 0, axi_fifo_enq_$next = 0;
-    uint64_t fifo_enq_$old = 0, fifo_enq_$next = 0;
-    uint64_t fifo_deq_$old = 0, fifo_deq_$next = 0;
+    uint32_t fl = 0;
 
     std::unordered_map<Interfaces::StandardMem::Request::id_t, Interfaces::StandardMem::Request*>* pendingTransactions;
     std::unordered_map<uint64_t, uint64_t> VA_VA_map;
@@ -140,7 +134,6 @@ private:
     bool isStalled;
     uint64_t cacheLineSize;
     uint8_t *dataAddress, *baseDataAddress;
-    uint64_t *AXIdataAddress; 
     
     Statistic<uint64_t>* statReadRequests;
     Statistic<uint64_t>* statWriteRequests;
