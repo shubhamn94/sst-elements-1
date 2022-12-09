@@ -141,6 +141,15 @@ ariel.enableStatistics([
       "write_requests"
 ])
 
+rtl.enableStatistics([
+      "read_requests",
+      "write_requests",
+    "read_request_sizes",
+    "write_request_sizes",
+    "split_read_requests",
+    "split_write_requests"
+])
+
 l1cpucache.enableStatistics([
       #"CacheHits",
       "latency_GetS_hit",

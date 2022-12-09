@@ -137,9 +137,63 @@ void Rtlmodel::finish() {
 //clockTick will actually execute the RTL design at every cycle based on the input and control signals updated by CPU CPU or Event Handler.
 bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
 
-    //output.verbose(CALL_INFO, 1, 0, "\nSim Done is: %d", ev.sim_done);
+    /*if(!isStalled) {
+        if(tickCount == 4) {
+            output.verbose(CALL_INFO, 1, 0, "AXI signals changed"); 
+            axi_tvalid_$next = 1;
+            axi_tdata_$next = 34;
+            output.verbose(CALL_INFO, 1, 0, "\n Sending data at tickCount 4");
+        }
+    }
 
-    if(!isStalled && tickCount < sim_cycle && !top->io_host_tohost.as_single_word()) {
+    if((axi_tvalid_$old ^ axi_tvalid_$next) || (axi_tdata_$old ^ axi_tdata_$next))  {
+        uint8_t ready = 1;
+        output.verbose(CALL_INFO, 1, 0, "handleAXISignals called"); 
+        if(axiport->queue.maybe_full) 
+            ready = 0;
+        handleAXISignals(ready); 
+        axiport->eval(true, true, true);
+
+        //Initial value of AXI control signals
+        fifo_enq_$old = axiport->queue.value_1.as_single_word();
+        fifo_enq_$next = axiport->queue.value.as_single_word();
+        uint64_t prev_data = axiport->queue.ram[fifo_enq_$old].as_single_word();
+
+        while(!(prev_data ^ axiport->queue.ram[fifo_enq_$next].as_single_word())) {
+            prev_data = axiport->queue.ram[fifo_enq_$next].as_single_word();
+            axiport->eval(true, true, true);
+            fifo_enq_$next = axiport->queue.value.as_single_word();
+            if(fifo_enq_$old ^ fifo_enq_$next) {
+                output.verbose(CALL_INFO, 1, 0, "\n\nQueue_value is: % %" PRIu64 PRIu64, axiport->queue.value, fifo_enq_$next); 
+                write_addr = axiport->queue.value.as_single_word();
+                if(write_addr == 0 && flg == 0) {
+                    write_addr = 434324;
+                    flg = 1;
+                }
+                output.verbose(CALL_INFO, 1, 0, "\n\nData enqueued in the queue: %" PRIu64, axiport->queue.ram[fifo_enq_$next]);
+            }
+            fifo_enq_$old = fifo_enq_$next;
+        }
+    }
+
+    axi_tdata_$old = axi_tdata_$next;
+    axi_tvalid_$old = axi_tvalid_$next;
+    axi_tready_$old = axi_tready_$next;
+
+    //uint64_t write_addr = (axiport->queue.ram[fifo_enq_$next].as_single_word());// << 32) | (axiport->queue.ram[fifo_enq_$next+1].as_single_word());
+    //uint64_t size = (axiport->queue.ram[fifo_enq_$next+2].as_single_word());// << 32) | (axiport->queue.ram[fifo_enq_$next+3].as_single_word());
+    size_t size = (512 * 8);*/
+
+    //output.verbose(CALL_INFO, 1, 0, "\nSim Done is: %d", ev.sim_done);
+    //
+    /*if(write_addr) {
+        printf("\nWrite addr is: %" PRIu64, write_addr);
+        RtlWriteEvent* rtlwr = new RtlWriteEvent(write_addr, size, (const uint8_t*)&axiport->queue.ram[0]);
+        generateWriteRequest(rtlwr);
+        write_addr = 0;
+    }*/
+
+    if(!isStalled && /*tickCount < sim_cycle &&*/ !top->io_host_tohost.as_single_word()) {
         if(tickCount < 5 && !fl) {
             top->reset = UInt<1>(1);
             fl = 1;
@@ -152,7 +206,7 @@ bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
         tick(ev.update_registers, ev.verbose);
         tickCount++;
     }
-	if( tickCount >= sim_cycle) {
+	else/*( tickCount >= sim_cycle)*/ {
         if(ev.sim_done) {
             output.verbose(CALL_INFO, 1, 0, "OKToEndSim, TickCount %" PRIu64, tickCount);
             RtlAckEv->setEndSim(true);

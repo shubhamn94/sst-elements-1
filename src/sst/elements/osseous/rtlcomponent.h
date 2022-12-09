@@ -126,6 +126,19 @@ private:
     bool mem_allocated = false;
     uint64_t sim_cycle;
     uint32_t fl = 0;
+    uint64_t write_addr = 0;
+    RtlMemoryManager* memmgr;
+    bool mem_allocated = false;
+    uint64_t sim_cycle;
+    bool flg = 0;
+
+    //AXI Handler signals
+    uint64_t axi_tdata_$old = 0, axi_tdata_$next = 0;
+    uint8_t axi_tvalid_$old = 0, axi_tvalid_$next = 0;
+    uint8_t axi_tready_$old = 0, axi_tready_$next = 0;
+    uint64_t axi_fifo_enq_$old = 0, axi_fifo_enq_$next = 0;
+    uint64_t fifo_enq_$old = 0, fifo_enq_$next = 0;
+    uint64_t fifo_deq_$old = 0, fifo_deq_$next = 0;
 
     std::unordered_map<Interfaces::StandardMem::Request::id_t, Interfaces::StandardMem::Request*>* pendingTransactions;
     std::unordered_map<uint64_t, uint64_t> VA_VA_map;

@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
   ariel_fence();
   update_RTL_sig(shmem);
 
-  params->perform_update(false, true, true, true, true, true, true, 10);
+  params->perform_update(false, true, true, true, true, true, true, 1000000);
   params->storetomem(shmem);
   params->storetomem(shmem);
   update_RTL_sig(shmem);
