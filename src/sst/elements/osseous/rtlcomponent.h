@@ -127,9 +127,6 @@ private:
     uint64_t sim_cycle;
     uint32_t fl = 0;
     uint64_t write_addr = 0;
-    RtlMemoryManager* memmgr;
-    bool mem_allocated = false;
-    uint64_t sim_cycle;
     bool flg = 0;
 
     //AXI Handler signals

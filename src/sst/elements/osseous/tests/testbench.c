@@ -126,14 +126,14 @@ int main(int argc, char *argv[]) {
   ctrl_pt[1] = UInt<32>(0); */
 
 
-  params->perform_update(false, true, true, true, true, true, false, 1000L);
+  params->perform_update(false, true, true, true, true, true, false, 10000000);
   params->storetomem(shmem);
   params->check(shmem);
   params->storetomem(shmem);
   ariel_fence();
   update_RTL_sig(shmem);
 
-  params->perform_update(false, true, true, true, true, true, true, 1000000);
+  params->perform_update(false, true, true, true, true, true, true, 10);
   params->storetomem(shmem);
   params->storetomem(shmem);
   update_RTL_sig(shmem);

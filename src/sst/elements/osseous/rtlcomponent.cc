@@ -193,7 +193,7 @@ bool Rtlmodel::clockTick( SST::Cycle_t currentCycle ) {
         write_addr = 0;
     }*/
 
-    if(!isStalled && /*tickCount < sim_cycle &&*/ !top->io_host_tohost.as_single_word()) {
+    if(!isStalled && (tickCount < sim_cycle || !top->io_host_tohost.as_single_word())) {
         if(tickCount < 5 && !fl) {
             top->reset = UInt<1>(1);
             fl = 1;

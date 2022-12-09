@@ -4743,7 +4743,6 @@ typedef struct Rtlheader {
       core$dpath$npc = core$dpath$_T_174;
     }
     core$dpath$io_icache_req_bits_addr = core$dpath$npc.bits<31,0>();
-    printf("PC is: %" PRIu32, core$dpath$npc.as_single_word());
     if (core$dpath$_T_182) {
       core$dpath$fe_pc$next = core.dpath.pc;
     } else {
